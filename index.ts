@@ -1,19 +1,57 @@
-// FALAR SOBRE API REST
+import TodoListClass, { Item } from "./core"
+const todolist = new TodoListClass("todolist.json")
+
+async function testRoute(req: Bun.BunRequest) {
+  return Response.json({
+    method: req.method,
+    time: new Date().toLocaleString('pt-BR'),
+    body: await req.body?.text(),
+  });
+}
 
 const server = Bun.serve({
-    port: 1337,
-    routes: {
-        "/api-debugger": Bun.file('public/api-debugger.html'),
-        "/test": {
-            GET: () => Response.json({ time: Date.now() }),
-            PUT: () => Response.json({ time: Date.now() }),
-            POST: () => Response.json({ time: Date.now() }),
-            DELETE: () => Response.json({ time: Date.now() }),
-        }
+  port: 3000,
+  routes: {
+    '/api-debugger': (req) => new Response(Bun.file('./public/api-debugger.html')),
+    '/test': {
+      GET: testRoute,
+      POST: testRoute,
+      PUT: testRoute,
+      DELETE: testRoute,
+      PATCH: testRoute,
+      OPTIONS: testRoute,
     },
-    fetch() {
-        return new Response("Not Found", { status:404 })
-    }
-})
+    '/todo': {
+      GET: async () => {
+        const items = await todolist.getItems()
+        return Response.json(items)
+      },
 
-console.log(`⚡ Servervidor rodando em ${server.url}`);
+      POST: async (req) => {
+        let data
+  
+        try {
+          data = await req.body?.json()
+        } catch(e) {
+          return new Response('json inválido', { status: 400 })
+        }
+
+        if (!data.title) 
+          return new Response('É preciso informar title', { status: 400 })
+
+        try {
+          await todolist.addItem(new Item(data.title))
+        } catch (error) {
+          return new Response('Erro ao adicionar item', { status: 500 })
+        }
+
+        return new Response('Created', { status: 201 })
+      }
+    }
+  },
+  fetch(req) {
+    return new Response("Not Found", { status: 404 });
+  },
+});
+
+console.log(`Server running at http://localhost:${server.port}`);
