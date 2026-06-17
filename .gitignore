@@ -1,6 +1,7 @@
-.install
-
 # dependencies (bun install)
+.installers
+.installs
+.install
 node_modules
 
 # output
