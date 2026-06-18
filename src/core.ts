@@ -21,7 +21,7 @@ class TodoList {
 
   constructor(filePath: string) {
     this.filePath = filePath
-    this.items = this.loadListFromDisk()
+    this.items = this.readListFromDisk()
   }
 
   private async saveListToDisk() {
@@ -30,30 +30,32 @@ class TodoList {
     await file.write(data)
   }
 
-  private async loadListFromDisk() {
+  private async readListFromDisk() {
     const file = Bun.file(this.filePath)
     // const text = await file.text()
     // const data = JSON.parse(text)
-    const data = await file.json() as Item[]
-    const items = data.map((v: any) => new Item(v.title))
+    const data = await file.json()
+    const items: Item[] = data.map((v: any) => {
+      return new Item(v.title)
+    })
     return items
   }
 
   /**
-   * Função que adiciona um novo item a lista
+   * Adiciona um novo item na lista de item
    */
   async addItem(item: Item) {
     const items = await this.items
     if (!item) 
-      throw "Item inválido"
-    if (!item.title.trim())
-      throw "Item deve conter um título"
+      throw 'item não pode ser nulo ou indefinido'
+    if (!item.title || !item.title.trim()) 
+      throw 'item.title não pode ser nulo ou indefinido'
     items.push(item)
     await this.saveListToDisk()
   }
 
   /**
-   * Remove item da lista por um indice
+   * Remove um item da lista de item pelo indice
    */
   async removeItem(index: number) {
     const items = await this.items
@@ -62,7 +64,7 @@ class TodoList {
   }
 
   /**
-   * Retorna a cópia da lista de itens
+   * Retona uma cópia da lista de itens
    */
   async getItems() {
     const items = await this.items
@@ -71,4 +73,4 @@ class TodoList {
 }
 
 export default TodoList
-export { TodoList, Item }
+export { Item, TodoList }
